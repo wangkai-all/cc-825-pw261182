@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>情景缩减与尾部保真工作台</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Scenario Reduction · Non-anticipative Tree · Tail Fidelity</p>
+      <h1>多期情景缩减与尾部约束工作台</h1>
+      <p class="subtitle">导入虚构路径与概率，联合优化代表选择和概率再分配，并把同一缩减前后集合送入小型规划模型。</p>
+    </div>
+    <div class="header-actions">
+      <label class="button secondary file-button">
+        导入 JSON/CSV
+        <input id="fileInput" type="file" accept=".json,.csv,application/json,text/csv" hidden />
+      </label>
+      <button id="loadSampleBtn" class="button secondary">180 条示例</button>
+      <button id="load10kBtn" class="button secondary">生成 10,000 条</button>
+      <button id="loadToyBtn" class="button secondary">小实例</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card" id="importCard">
+      <div class="card-head">
+        <h2>1. 导入检查</h2>
+        <span id="datasetName" class="muted">尚未载入数据</span>
+      </div>
+      <div id="validationPanel" class="validation-grid">
+        <div class="empty-state">正在启动；若没有自动载入，请点击右上角示例数据。</div>
+      </div>
+      <div class="control-row">
+        <button id="normalizeBtn" class="button" disabled>归一化概率后继续</button>
+        <label class="inline-check"><input id="dropZeroInput" type="checkbox" /> 缩减时排除零概率路径（仍保留检查记录）</label>
+      </div>
+    </section>
+
+    <section class="card controls-card">
+      <div class="card-head"><h2>2. 缩减与尾部保护</h2><span id="runStatus" class="status-pill">待运行</span></div>
+      <div class="controls-grid">
+        <label>代表路径数 K
+          <div class="range-row"><input id="kInput" type="range" min="2" max="40" value="12" /><output id="kValue">12</output></div>
+        </label>
+        <label>尾部保护权重 λ
+          <div class="range-row"><input id="tailWeightInput" type="range" min="0" max="5" step="0.25" value="1" /><output id="tailWeightValue">1.00</output></div>
+        </label>
+        <label>尾部 VaR/CVaR 分位
+          <select id="tailLevelInput">
+            <option value="0.90" selected>90%</option>
+            <option value="0.95">95%</option>
+            <option value="0.99">99%</option>
+          </select>
+        </label>
+        <label>硬保留最高损失路径数
+          <input id="tailGuardsInput" type="number" min="0" max="8" value="2" />
+        </label>
+        <label>距离时间结构
+          <select id="metricInput">
+            <option value="prefix" selected>前缀累积距离（强调共同前缀/时间先后）</option>
+            <option value="chronological">普通分期加权距离</option>
+          </select>
+        </label>
+        <label>时间权重
+          <select id="timeCurveInput">
+            <option value="early" selected>前期更重要</option>
+            <option value="uniform">各期相同</option>
+            <option value="late">后期更重要</option>
+          </select>
+        </label>
+        <label class="inline-check strong"><input id="prefixLockedInput" type="checkbox" checked /> 强制非预知前缀映射</label>
+        <button id="runBtn" class="button primary">运行缩减 + 同一规划模型</button>
+        <button id="paretoBtn" class="button secondary">生成平均距离/尾部损失代价前沿</button>
+      </div>
+    </section>
+
+    <section id="kpiSection" class="kpi-grid" aria-live="polite"></section>
+
+    <section class="card wide">
+      <div class="card-head">
+        <h2>3. 两种代价：平均分布距离 vs 极端损失保真</h2>
+        <span class="muted">每个点是一次独立联合优化；表格给出可见数值。</span>
+      </div>
+      <div id="tradeoffCallouts" class="callout-grid"></div>
+      <div class="chart-and-table">
+        <div id="paretoChart" class="chart-box" role="img" aria-label="平均距离与 CVaR 误差权衡图"></div>
+        <div class="table-wrap compact">
+          <table id="paretoTable">
+            <thead><tr>
+              <th>λ</th><th>平均距离</th><th>尾部保护的距离代价</th>
+              <th>|CVaR误差|</th><th>距离优先的尾部低估</th><th>规划遗憾</th><th>Q</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>4. 原路径 → 代表路径</h2><span id="assignmentCount" class="muted"></span></div>
+      <div class="explorer-grid">
+        <div id="repList" class="rep-list" aria-label="代表路径列表"></div>
+        <div class="assignment-detail">
+          <div class="control-row">
+            <input id="assignmentSearch" class="search-input" type="search" placeholder="搜索原路径 ID / 标签…" />
+            <select id="pathDimensionSelect" aria-label="路径图维度"></select>
+          </div>
+          <div id="pathChart" class="path-chart"></div>
+          <div class="table-wrap assignment-table">
+            <table id="assignmentTable">
+              <thead><tr><th>原路径</th><th>概率</th><th>代表</th><th>距离</th><th>损失差</th><th>尾部</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>5. 非预知情景树</h2><div id="treeBadges" class="badge-row"></div></div>
+      <p class="muted">节点只保存截至当前期的前缀；代表路径在真正分歧前共享节点。前缀映射检查保证：原路径共同前缀组不会被提前拆到不同的缩减前缀。</p>
+      <div id="treeContainer" class="tree-container"></div>
+    </section>
+
+    <section class="card wide">
+      <div class="card-head"><h2>6. 缩减前后送入同一个小规划模型</h2><span class="muted">多期库存/应急备货：Q 为第一阶段决策，缺货按各期运价与中断强度应急采购。</span></div>
+      <div id="planningKpis" class="kpi-grid compact-kpis"></div>
+      <div class="planning-grid">
+        <div id="planningChart" class="chart-box tall" role="img" aria-label="缩减前后规划目标曲线"></div>
+        <div class="table-wrap">
+          <table id="planningTable">
+            <thead><tr><th>项目</th><th>原始情景</th><th>缩减情景</th><th>在原始分布上评估缩减决策</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>7. 小实例完全搜索对照</h2><button id="exactBtn" class="button secondary">重新运行 C(8,3)</button></div>
+      <div id="exactPanel"><div class="empty-state">点击运行完全搜索、启发式对照、概率守恒与树结构检查。</div></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>8. 恢复任务幂等演练</h2><button id="recoveryBtn" class="button secondary">模拟中断并恢复</button></div>
+      <p class="muted">任务在提交部分概率质量后“崩溃”，随后用同一批消息恢复。已处理路径 ID 会跳过，账本中的代表质量不会被再次分配。</p>
+      <div id="recoveryPanel"><div class="empty-state">尚未运行恢复演练。</div></div>
+    </section>
+  </main>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>

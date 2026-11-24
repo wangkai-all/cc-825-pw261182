@@ -1,0 +1,236 @@
+{
+  "name": "小型前缀对照实例",
+  "description": "8 paths with explicit common prefixes and one severe tail path.",
+  "periods": [
+    "T1",
+    "T2",
+    "T3"
+  ],
+  "dimensions": [
+    {
+      "key": "demand",
+      "label": "需求",
+      "unit": "千件",
+      "scale": 10.0,
+      "weight": 1.0
+    },
+    {
+      "key": "freight",
+      "label": "运价",
+      "unit": "千元/千件",
+      "scale": 3.0,
+      "weight": 0.8
+    },
+    {
+      "key": "disruption",
+      "label": "中断",
+      "unit": "级",
+      "scale": 1.0,
+      "weight": 1.2
+    }
+  ],
+  "planning": {
+    "qStep": 2.0,
+    "orderCost": 10.5,
+    "holdingCost": 1.2,
+    "salvageValue": 3.2,
+    "emergencyBaseCost": 13.5,
+    "freightCostWeight": 1.15,
+    "disruptionPenalty": 7.0
+  },
+  "paths": [
+    {
+      "id": "A1",
+      "probability": 0.22,
+      "tags": [
+        "normal"
+      ],
+      "values": [
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          20,
+          6.5,
+          0
+        ],
+        [
+          28,
+          7.0,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "A2",
+      "probability": 0.18,
+      "tags": [
+        "normal"
+      ],
+      "values": [
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          20,
+          6.5,
+          0
+        ],
+        [
+          34,
+          7.2,
+          0.2
+        ]
+      ]
+    },
+    {
+      "id": "B1",
+      "probability": 0.16,
+      "tags": [
+        "high"
+      ],
+      "values": [
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          42,
+          8.0,
+          0.8
+        ],
+        [
+          48,
+          8.5,
+          1.0
+        ]
+      ]
+    },
+    {
+      "id": "B2",
+      "probability": 0.12,
+      "tags": [
+        "high"
+      ],
+      "values": [
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          42,
+          8.0,
+          0.8
+        ],
+        [
+          55,
+          9.1,
+          1.3
+        ]
+      ]
+    },
+    {
+      "id": "C1",
+      "probability": 0.07,
+      "tags": [
+        "storm"
+      ],
+      "values": [
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          75,
+          10.5,
+          2.0
+        ],
+        [
+          82,
+          11.5,
+          2.8
+        ]
+      ]
+    },
+    {
+      "id": "C2",
+      "probability": 0.03,
+      "tags": [
+        "severe",
+        "tail"
+      ],
+      "values": [
+        [
+          10,
+          6,
+          0
+        ],
+        [
+          75,
+          10.5,
+          2.0
+        ],
+        [
+          98,
+          13.0,
+          5.0
+        ]
+      ]
+    },
+    {
+      "id": "D1",
+      "probability": 0.13,
+      "tags": [
+        "normal"
+      ],
+      "values": [
+        [
+          24,
+          6.2,
+          0
+        ],
+        [
+          30,
+          6.8,
+          0
+        ],
+        [
+          33,
+          7.1,
+          0
+        ]
+      ]
+    },
+    {
+      "id": "D2",
+      "probability": 0.09,
+      "tags": [
+        "high"
+      ],
+      "values": [
+        [
+          24,
+          6.2,
+          0
+        ],
+        [
+          30,
+          6.8,
+          0
+        ],
+        [
+          44,
+          8.0,
+          0.6
+        ]
+      ]
+    }
+  ]
+}
